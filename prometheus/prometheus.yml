@@ -1,0 +1,61 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'devopslabs'
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+#  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+#  - job_name: 'prometheus'
+#    # Override the global default and scrape targets from this job every 5 seconds.
+#    scrape_interval: 5s
+#    # and here are the definitions of the explicit targets (if no service discovery is used)
+#    static_configs:
+#      - targets: ['localhost:9090']
+# Load a directory of JSON configs to do an auto-discovery
+  - job_name: 'stub'  # This is a default value, it is mandatory.
+    file_sd_configs:
+      - files:
+        - /etc/prometheus/targets/*.json
+# Load a directory of JSON configs to do an auto-discovery
+#  - job_name: 'ec2-system'
+#    ec2_sd_configs:
+#      - region: eu-west-3 (set your own AWS instance region)
+#        access_key: <secret> (set your own access key)
+#        secret_key: <secret> (set your own secret key)
+#        port: 9100 (define what is required)
+##     and define any other parameter like scrape_interval, refresh_interval, etc...
+#    relabel_configs:
+#      - source_labels: [__meta_ec2_public_ip]
+#        regex: '(.+)'
+#        target_label: '__address__'
+#        replacement: '${1}:9100'
+#      - source_labels: 
+#        - '__meta_ec2_tag_Name'
+#        target_label: 'instance'
+#      - source_labels: 
+#        - '__meta_ec2_tag_customer'
+#        target_label: 'customer'
+#      - source_labels: 
+#        - '__meta_ec2_tag_role'
+#        target_label: 'role'
+
+# Rule files specifies a list of files where rules or alerts are specified. 
+# Rules and alerts are read from all matching files.
+# During the lab will be uncommented to show the feature
+rule_files:
+#  - /etc/prometheus/rules/recording_rules/cpu.yml
+#  - /etc/prometheus/rules/alert_rules/alert_instance_down_example.yml
+
+# Specifies settings related to the Alertmanager.
+alerting:
+#  alert_relabel_configs:
+#    - <relabel_config>
+  alertmanagers:
+    - static_configs:
+      # define the targets by hostname (localhost or ip are not valid)
+      - targets: ['alertmanager:9093']

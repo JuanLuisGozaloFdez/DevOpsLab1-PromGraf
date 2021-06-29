@@ -1,0 +1,5 @@
+groups:
+  - name: Rendimiento CPU
+    rules:
+    - record: systems:cpu_percentage_usage
+      expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)

@@ -1,0 +1,9 @@
+version: "3.0"
+
+services:
+  smtp:
+    image: namshi/smtp
+    container_name: smtp_relay
+    restart: always
+    ports:
+     - 25:25

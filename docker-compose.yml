@@ -1,0 +1,87 @@
+version: "3.0"
+
+networks:
+  public: {}
+
+volumes:
+  grafana_lib: {}
+  prometheus_data: {}
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    networks:
+      - public
+    volumes:
+      - prometheus_data:/vol/prometheus_data
+      - ./prometheus:/etc/prometheus
+      - ./prometheus/targets/prometheus.json:/etc/prometheus/targets/prometheus.json
+      - ./prometheus/targets/grafana.json:/etc/prometheus/targets/grafana.json
+      - ./prometheus/targets/node-exporter.json:/etc/prometheus/targets/node-exporter.json      
+      
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    ports:
+      - 3000:3000
+    networks:
+      - public
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - grafana_lib:/var/lib/grafana
+      
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+    depends_on:
+      - prometheus
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    ports:
+      - 9100:9100
+    networks:
+      - public
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      
+  alertmanager: 
+    image: prom/alertmanager
+    container_name: alertmanager
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    ports:
+      - 9093:9093
+    networks:
+      - public
+    volumes:
+      - /tmp/prom:/tmp/prom
+      - ./alertmanager:/etc/alertmanager
+      
+  # A simple Simple Mail Transfer Protocol server (SMTP) set for testing purposes:
+  smtp:
+    image: namshi/smtp
+    container_name: smtp_server
+    restart: unless-stopped
+    networks:
+      - public
+    ports:
+     - 25:25
